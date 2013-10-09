@@ -13,6 +13,7 @@ class MoviesController < ApplicationController
     @movies = Movie.find(:all, :order => @order)
    else
     @movies = Movie.all
+    end
   end
 
   def new
