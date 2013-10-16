@@ -7,6 +7,31 @@ class MoviesController < ApplicationController
   end
 
   def index
+
+    if !params.has_key?(:order)
+      params[:order] = session[:order]
+    else
+      session[:order] = params[:order]
+    end
+
+    if !params.has_key?(:ratings)
+      params[:ratings] = session[:ratings]
+    else
+      session[:ratings] = params[:ratings]
+    end
+
+    @all_ratings = Movie.ratings
+    @order = params[:order]
+    @ratings = params[:ratings] ? params[:ratings].values : @all_ratings
+    if Movie.column_names.include? @order
+      @movies = Movie.find(:all, :order => @order, :conditions => ['rating in (?)', @ratings])
+    else
+      @movies = Movie.find(:all, :conditions => ['rating in (?)', @ratings])
+    end
+
+    session = params
+
+=begin
    ensure_table_filters
    filters = session[:table_filters]
    @order = filters[:order]
@@ -18,6 +43,8 @@ class MoviesController < ApplicationController
     @movies = Movie.find(:all, :conditions => ['rating in (?)', @ratings])
     end
     @all_ratings = Movie.ratings
+=end
+
   end
 
   def new
@@ -46,20 +73,6 @@ class MoviesController < ApplicationController
     @movie.destroy
     flash[:notice] = "Movie '#{@movie.title}' deleted."
     redirect_to movies_path
-  end
-
-  private
-  def ensure_table_filters
-    
-    session[:table_filters] = {} if session[:table_filters].nil?
-    if params[:order] != session[:table_filters][:order] || params[:ratings] != session[:table_filters][:ratings]
-      needs_redirect = true
-    end
-    session[:table_filters][:order] = params[:order] unless params[:order].nil?
-    session[:table_filters][:ratings] = params[:ratings] unless params[:ratings].nil?
-
-    flash.keep
-    redirect_to movies_path(session[:table_filters]) if needs_redirect
   end
 
 end
